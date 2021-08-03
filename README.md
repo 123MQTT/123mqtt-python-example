@@ -4,6 +4,7 @@ A collection of python and micropython code to send and receive messages over 12
 
 ## Python Dependency Installation:
 pip install pycrypto
+pip install ecdsa
 
 ## Micropython Dependency Installation:
 micropython -m instal cryptolib
