@@ -1,5 +1,6 @@
 from os import urandom
 from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
 
 # For Generating cipher text
 secret_key = urandom(16)
@@ -12,8 +13,8 @@ print('iv: ' + iv.hex())
 
 # Encrypt the message from text to bytes and hexstring
 print('*** Encrypt original text')
-message = 'Lorem Ipsum text'
-encrypted_text_bytes = crypto.encrypt(message)
+message = 'Lorem Ipsum text with padding'
+encrypted_text_bytes = crypto.encrypt(pad(message.encode(), AES.block_size))
 encrypted_text_hex = encrypted_text_bytes.hex()
 print('Original text       :', message)
 print('Encrypted bytes     :', encrypted_text_bytes)

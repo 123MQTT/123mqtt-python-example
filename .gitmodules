@@ -1,0 +1,3 @@
+[submodule "mpyaes"]
+	path = mpyaes
+	url = https://github.com/123MQTT/mpyaes

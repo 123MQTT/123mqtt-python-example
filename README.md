@@ -3,7 +3,7 @@
 A collection of python and micropython code to send and receive messages over 123MQTT connection.
 
 ## Python Dependency Installation:
-* pip install pycrypto
+* pip install pycryptodome
 * pip install ecdsa
 * pip install paho-mqtt
 

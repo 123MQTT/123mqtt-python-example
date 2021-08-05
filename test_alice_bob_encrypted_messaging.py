@@ -1,5 +1,6 @@
 from ecdsa import ECDH, SigningKey, VerifyingKey, SECP128r1
 from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
 from os import urandom
 
 # For quick testing purposes, Alice keypairs and Bob keypairs are generated
@@ -45,14 +46,14 @@ print('Bob key  : ' + bob_vk.to_string().hex())
 print('')
 
 # Alice wants to send a message and sign it
-message = 'Lorem Ipsum text'
-signature = alice_sk.sign(message.encode())
+message = 'Lorem Ipsum text with padding'
+signature = alice_sk.sign(pad(message.encode(), AES.block_size))
 
 # Once the signature is created, she encrypts the message
 secret_key = alice_secret
 iv = urandom(16)
 crypto = AES.new(secret_key, AES.MODE_CBC, iv)
-encrypted_text_bytes = crypto.encrypt(message)
+encrypted_text_bytes = crypto.encrypt(pad(message.encode(), AES.block_size))
 encrypted_text_hex = encrypted_text_bytes.hex()
 
 print('Alice message:')
