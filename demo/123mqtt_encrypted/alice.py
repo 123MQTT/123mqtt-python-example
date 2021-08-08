@@ -5,6 +5,7 @@ from Crypto.Util.Padding import pad
 from os import urandom
 import time
 import threading
+import json
 
 PRIVATEKEY = 'ff746ad94861f073d07196d6c901b45f'
 shared_secret = ''
@@ -78,13 +79,23 @@ def on_message(client, userdata, msg):
     sender = received[0]
     message_type = received[1][0]
     if (message_type == 'request' and msg.payload == b'publickey'):
+        # got a request for a public key
         print('sending public key')
         client.publish('public-data/Old-Engine-6372/' + received[0] + '/publickey', vk.to_string().hex(), 2)
     elif (message_type == 'publickey'):
+        # received public key from the other end
         received_public_key = msg.payload
         ecdh.load_received_public_key_bytes(bytearray.fromhex(received_public_key.decode()))
         shared_secret = ecdh.generate_sharedsecret_bytes()
         print('Shared secret: ' + shared_secret.hex())
+    elif (message_type == 'message'):
+        # got a message
+        received = json.loads(msg.payload)
+        # decrypting message when shared secret is obtained
+        if (shared_secret != '' and received['encryption'] != 'none'):
+            decrypto = AES.new(shared_secret, AES.MODE_CBC, bytes.fromhex(received['iv']))
+            decrypted_text_bytes = decrypto.decrypt(bytes.fromhex(received['message']))
+            print('*** Decrypted message: ', decrypted_text_bytes.decode())
     else:
         pass
 
@@ -102,7 +113,8 @@ def send_periodic_message():
     print(time.ctime())
     if (shared_secret == ''):
         #send unencrypted message
-        client.publish("public-data/Old-Engine-6372/Silly-Headrest-2013/message", "hello Bob!", 2)
+        message = {"message" : "hello Bob!", "encryption" : "none", "iv" : "none"}
+        client.publish("public-data/Old-Engine-6372/Silly-Headrest-2013/message", json.dumps(message), 2)
     else:
         #send encrypted message
         message = 'hello Bob!'
@@ -111,7 +123,8 @@ def send_periodic_message():
         crypto = AES.new(shared_secret, AES.MODE_CBC, iv)
         encrypted_text_bytes = crypto.encrypt(pad(message.encode(), AES.block_size))
         encrypted_text_hex = encrypted_text_bytes.hex()
-        client.publish("public-data/Old-Engine-6372/Silly-Headrest-2013/message", encrypted_text_hex, 2)
+        message = {"message" : encrypted_text_hex, "encryption" : "AES-128-CBC", "iv" : iv.hex()}
+        client.publish("public-data/Old-Engine-6372/Silly-Headrest-2013/message", json.dumps(message), 2)
     threading.Timer(5, send_periodic_message).start()
 
 # get private key and public keys, and load private key for ECDH
